@@ -152,3 +152,114 @@ class AiPathfinder:
                 return False 
             
         return False
+
+
+    # -------- UCS ---------
+
+    def UCS(self):
+        pQueue = [(0, self.start)] 
+        cost = {self.start: 0} # Dictionary storing costs
+        parent = {self.start: None}
+        explored = []
+        
+        while pQueue:
+            # FIX: Renamed 'cost' to 'currentCost' to avoid overwriting the dictionary
+            currentCost, curr = heapq.heappop(pQueue)
+            
+            if curr == self.target:
+                self.visualizeSearch(list(pQueue), explored, "UCS", self.getPath(parent, curr))
+                return True
+            
+            if curr not in explored:
+                explored.append(curr)
+                for row, col in self.moveOrder:
+                    neighbor = (curr[0] + row, curr[1] + col)
+                    
+                    # FIX: Use 'currentCost' here
+                    newCost = currentCost + 1
+                    
+                    if self.isValidMove(neighbor[0], neighbor[1]):
+                        if neighbor not in cost or newCost < cost[neighbor]:
+                            cost[neighbor] = newCost
+                            parent[neighbor] = curr
+                            heapq.heappush(pQueue, (newCost, neighbor))
+                
+                if not self.visualizeSearch(list(pQueue), explored, "UCS"):
+                    return False
+                
+
+
+# -------- Bi-Directional ---------
+
+    def biDirectional(self):
+        fQueue, bQueue = collections.deque([self.start]), collections.deque([self.target])
+        fParents, bParents = {self.start: None}, {self.target: None}
+        fExplored, bExplored = [], []
+
+        while fQueue and bQueue:
+            # Forward
+            currNodeF = fQueue.popleft()
+            fExplored.append(currNodeF)
+            for row, col in self.moveOrder:
+                adj = (currNodeF[0] + row, currNodeF[1] + col)
+                if self.isValidMove(adj[0], adj[1]) and adj not in fParents:
+                    fParents[adj] = currNodeF
+                    fQueue.append(adj)
+                    if adj in bParents:
+                        path = self.getPath(fParents, adj) + self.getPath(bParents, adj)[::-1][1:]
+                        self.visualizeSearch(list(fQueue)+list(bQueue), fExplored+bExplored, "Bi-Directional", path)
+                        return True
+            
+            if not self.visualizeSearch(list(fQueue)+list(bQueue), fExplored+bExplored, "Bi-Directional"):
+                return False
+
+            # Backward
+            currNodeB = bQueue.popleft()
+            bExplored.append(currNodeB)
+            for row, col in self.moveOrder:
+                adj = (currNodeB[0] + row, currNodeB[1] + col)
+                if self.isValidMove(adj[0], adj[1]) and adj not in bParents:
+                    bParents[adj] = currNodeB
+                    bQueue.append(adj)
+                    if adj in fParents:
+                        path = self.getPath(fParents, adj) + self.getPath(bParents, adj)[::-1][1:]
+                        self.visualizeSearch(list(fQueue)+list(bQueue), fExplored+bExplored, "Bi-Directional", path)
+                        return True
+            
+            if not self.visualizeSearch(list(fQueue)+list(bQueue), fExplored+bExplored, "Bi-Directional"):
+                return False
+
+def menuDisplay():
+    pathFinder = AiPathfinder()
+    while True:
+        print("\n --- ALGORITHM MENU ---\n")
+        print("1. BFS  2. DFS  3. UCS  4. DLS  5. IDDFS  6. Bidirectional  7. Exit")
+        opt = input("Choice: ")
+        
+        if opt == '7': 
+            break
+        
+        if opt in ['1', '2', '3', '4', '5', '6']:
+            mat.figure(figsize=(7, 7)) 
+            
+            if opt == '1': pathFinder.BFS()
+            elif opt == '2': pathFinder.DFS()
+            elif opt == '3': pathFinder.UCS()
+            elif opt == '4':
+                try:
+                    limit=int(input("Enter limit: "))
+                    pathFinder.DFS(limit=limit)
+                except ValueError:
+                    print("Please enter a valid number.")
+            elif opt == '5': pathFinder.IDS()
+            elif opt == '6': pathFinder.biDirectional()
+            
+            if mat.get_fignums():
+                mat.show() 
+        else:
+             print("Invalid choice!")
+
+if __name__ == "__main__":
+    menuDisplay()
+
+
