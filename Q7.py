@@ -29,3 +29,37 @@ class AiPathfinder:
             if self.grid[r][c] != -1:
                 return True
         return False
+
+
+    def visualizeSearch(self, frontier, explored, title, path=None):
+        if not mat.get_fignums(): return False 
+        mat.clf()
+        mat.imshow(self.grid, cmap='Pastel1')
+
+        for r in range(self.gridSize):
+            for c in range(self.gridSize):
+                if self.grid[r][c] == -1:
+                    mat.text(c, r, "-1", va='center', ha='center', color='black', bbox=dict(facecolor='red', boxstyle='square,pad=1.5'))
+                else:
+                    mat.text(c, r, "0", va='center', ha='center', color='black', alpha=0.6)
+
+        for node in explored:
+            mat.scatter(node[1], node[0], color='green', marker='s', s=1300)
+
+        for item in frontier:
+            nodePos = None
+            if isinstance(item, tuple):
+                if isinstance(item[0], int) and isinstance(item[1], int): nodePos = item
+                elif len(item) == 2 and isinstance(item[1], tuple): nodePos = item[1]
+            if nodePos:
+                mat.scatter(nodePos[1], nodePos[0], color='yellow', marker='s', s=1300)
+
+        if path:
+            rows, cols = zip(*path)
+            mat.plot(cols, rows, color='black', linewidth=10)
+
+        mat.text(self.start[1], self.start[0], 'S', color='white', weight='bold', ha='center', va='center', bbox=dict(facecolor='purple' ,boxstyle='square,pad=1.5'))
+        mat.text(self.target[1], self.target[0], 'G', color='white', weight='bold', ha='center', va='center', bbox=dict(facecolor='blue', boxstyle='square,pad=1.5'))
+        mat.title(f"Algorithm: {title}")
+        mat.pause(0.01) 
+        return True
