@@ -63,3 +63,92 @@ class AiPathfinder:
         mat.title(f"Algorithm: {title}")
         mat.pause(0.01) 
         return True
+    
+    
+
+    def getPath(self, parent, endNode):
+        route = []
+        curr = endNode
+        while curr is not None:
+            route.append(curr)
+            curr = parent.get(curr)
+        return route[::-1]
+
+
+    # -------- ALGORITHMS --------
+
+
+
+    # -------- BFS ---------
+
+    def BFS(self):
+        queue = collections.deque([self.start])
+        parents = {self.start: None}
+        explored = []
+        
+        while queue:
+            curr = queue.popleft()
+            if curr == self.target:
+                self.visualizeSearch(list(queue), explored, "BFS", self.getPath(parents, curr))
+                return True
+            
+            if curr not in explored:
+                explored.append(curr)
+                for row, col in self.moveOrder:
+                    neighbor = (curr[0] + row, curr[1] + col)
+                    if self.isValidMove(neighbor[0], neighbor[1]) and neighbor not in parents:
+                        parents[neighbor] = curr
+                        queue.append(neighbor)
+                
+                if not self.visualizeSearch(list(queue), explored, "BFS"):
+                    return False
+        return False
+    
+    
+    # -------- DFS ---------
+
+    def DFS(self, limit=None):
+        stack = [(self.start, 0)]
+        parents = {self.start: None}
+        explored = []
+        title=""
+        if limit==None:
+            title="DFS"
+        else:
+            title="DLS"
+        
+        while stack:
+            curr, depth = stack.pop()
+            if curr == self.target:
+                self.visualizeSearch([s[0] for s in stack], explored, title, self.getPath(parents, curr))
+                return True
+            
+            if curr not in explored:
+                if limit is None or depth < limit:
+                    explored.append(curr)
+                    for dr, dc in reversed(self.moveOrder):
+                        neighbor = (curr[0] + dr, curr[1] + dc)
+                        if self.isValidMove(neighbor[0], neighbor[1]) and neighbor not in parents:
+                            parents[neighbor] = curr
+                            stack.append((neighbor, depth + 1))
+                    
+                    if not self.visualizeSearch([s[0] for s in stack], explored, title):
+                        return False
+        return False
+    
+
+    # -------- IDS ---------
+
+    def IDS(self):
+        for depth in range(self.gridSize * self.gridSize):
+            print(f"Current Depth Limit: {depth}")
+            
+            found = self.DFS(limit=depth)
+            
+            if found:
+                return True
+            
+            if not mat.get_fignums(): 
+                return False 
+            
+        return False
